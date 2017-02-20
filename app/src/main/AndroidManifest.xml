@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2016 The Android Open Source Project
+<!--
+ Copyright (C) 2016 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
      limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.miwok">
+          package="com.example.android.miwok">
 
     <application
         android:allowBackup="true"
@@ -24,10 +25,25 @@
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".ColorsActivity"
+            android:label="@string/category_colors">
+        </activity>
+        <activity
+            android:name=".FamilyActivity"
+            android:label="@string/category_family">
+        </activity>
+        <activity
+            android:name=".NumberActivity"
+            android:label="@string/category_numbers">
+        </activity>
+        <activity
+            android:name=".PhraseActivity"
+            android:label="@string/category_phrases">
         </activity>
     </application>
 

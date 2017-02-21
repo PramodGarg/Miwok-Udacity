@@ -13,12 +13,19 @@ import com.example.android.miwok.adapters.WordAdapter;
 import java.util.ArrayList;
 
 public class PhraseActivity extends AppCompatActivity {
+    MediaPlayer mMediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_view);
 
+        final MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                releaseMediaPlayer();
+            }
+        };
         //Create arrays of words
         final ArrayList<Word> words = new ArrayList<Word>();
         words.add(new Word("Where are you going?", "minto wuksus", R.raw.phrase_where_are_you_going));
@@ -38,9 +45,20 @@ public class PhraseActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                MediaPlayer mMediaPlayer = MediaPlayer.create(PhraseActivity.this, words.get(position).getAudio());
+                releaseMediaPlayer();
+                mMediaPlayer = MediaPlayer.create(PhraseActivity.this, words.get(position).getAudio());
                 mMediaPlayer.start();
+                mMediaPlayer.setOnCompletionListener(onCompletionListener);
             }
         });
+
+
+    }
+
+    private void releaseMediaPlayer(){
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
     }
 }

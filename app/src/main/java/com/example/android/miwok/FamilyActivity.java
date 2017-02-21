@@ -13,11 +13,19 @@ import com.example.android.miwok.adapters.WordAdapter;
 import java.util.ArrayList;
 
 public class FamilyActivity extends AppCompatActivity {
+    private MediaPlayer mMediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_view);
+
+        final MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                releaseMediaPlayer();
+            }
+        };
 
         //Create arrays of words
         final ArrayList<Word> words = new ArrayList<Word>();
@@ -38,9 +46,18 @@ public class FamilyActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                releaseMediaPlayer();
                 MediaPlayer mMediaPlayer = MediaPlayer.create(FamilyActivity.this, words.get(position).getAudio());
                 mMediaPlayer.start();
+                mMediaPlayer.setOnCompletionListener(onCompletionListener);
             }
         });
+    }
+
+    private void releaseMediaPlayer(){
+        if (mMediaPlayer != null) {
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
     }
 }

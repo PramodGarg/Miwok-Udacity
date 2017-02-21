@@ -46,7 +46,7 @@ public class ColorsActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 releaseMediaPlayer();
-                MediaPlayer mMediaPlayer = MediaPlayer.create(ColorsActivity.this, words.get(position).getAudio());
+                mMediaPlayer = MediaPlayer.create(ColorsActivity.this, words.get(position).getAudio());
                 mMediaPlayer.start();
                 mMediaPlayer.setOnCompletionListener(onCompletionListener);
             }
@@ -59,5 +59,11 @@ public class ColorsActivity extends AppCompatActivity {
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        releaseMediaPlayer();
     }
 }

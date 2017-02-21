@@ -1,7 +1,10 @@
 package com.example.android.miwok;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.example.android.miwok.adapters.Word;
@@ -32,5 +35,12 @@ public class FamilyActivity extends AppCompatActivity {
         WordAdapter wordAdapter = new WordAdapter(this, words, R.color.category_family);
         ListView listView = (ListView) findViewById(R.id.list);
         listView.setAdapter(wordAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                MediaPlayer mMediaPlayer = MediaPlayer.create(FamilyActivity.this, words.get(position).getAudio());
+                mMediaPlayer.start();
+            }
+        });
     }
 }

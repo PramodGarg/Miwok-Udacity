@@ -1,5 +1,7 @@
 package com.example.android.miwok;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -12,8 +14,33 @@ import com.example.android.miwok.adapters.WordAdapter;
 
 import java.util.ArrayList;
 
+import static android.media.AudioManager.AUDIOFOCUS_GAIN;
+import static android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT;
+import static android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK;
+
 public class PhraseActivity extends AppCompatActivity {
     MediaPlayer mMediaPlayer;
+    private AudioManager mAudioManager;
+    AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener =
+            new AudioManager.OnAudioFocusChangeListener() {
+                @Override
+                public void onAudioFocusChange(int focusChange) {
+                    if (focusChange == AUDIOFOCUS_LOSS_TRANSIENT ||
+                            focusChange == AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                        // Since audio files are small,we start again if paused
+                        if (mMediaPlayer != null) {
+                            mMediaPlayer.pause();
+                            mMediaPlayer.seekTo(0);
+                        }
+                    } else if (focusChange == AUDIOFOCUS_GAIN) {
+                        //Resume playback
+                        mMediaPlayer.start();
+                    } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                        //Release media if we lose focus
+                        releaseMediaPlayer();
+                    }
+                }
+            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +53,8 @@ public class PhraseActivity extends AppCompatActivity {
                 releaseMediaPlayer();
             }
         };
+
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         //Create arrays of words
         final ArrayList<Word> words = new ArrayList<Word>();
         words.add(new Word("Where are you going?", "minto wuksus", R.raw.phrase_where_are_you_going));
@@ -45,14 +74,25 @@ public class PhraseActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // Release if different sudio is played before the previous one finished
                 releaseMediaPlayer();
-                mMediaPlayer = MediaPlayer.create(PhraseActivity.this, words.get(position).getAudio());
-                mMediaPlayer.start();
-                mMediaPlayer.setOnCompletionListener(onCompletionListener);
+                //Request audio focus for playback
+                int result = mAudioManager.requestAudioFocus(mOnAudioFocusChangeListener,
+                        //uses music stream
+                        AudioManager.STREAM_MUSIC,
+                        //request permanent focus,no other sounds plays side by side
+                        AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+
+                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                    //we have audio focus
+                    mMediaPlayer = MediaPlayer.create(PhraseActivity.this, words.get(position).getAudio());
+                    mMediaPlayer.start();
+                    mMediaPlayer.setOnCompletionListener(onCompletionListener);
+
+                }
+
             }
         });
-
-
     }
 
     private void releaseMediaPlayer() {

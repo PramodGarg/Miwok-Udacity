@@ -1,5 +1,7 @@
 package com.example.android.miwok;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -12,9 +14,34 @@ import com.example.android.miwok.adapters.WordAdapter;
 
 import java.util.ArrayList;
 
+import static android.media.AudioManager.AUDIOFOCUS_GAIN;
+import static android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT;
+import static android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK;
+
 public class ColorsActivity extends AppCompatActivity {
 
     private MediaPlayer mMediaPlayer;
+    AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener =
+            new AudioManager.OnAudioFocusChangeListener() {
+                @Override
+                public void onAudioFocusChange(int focusChange) {
+                    if (focusChange == AUDIOFOCUS_LOSS_TRANSIENT ||
+                            focusChange == AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                        // Since audio files are small,we start again if paused
+                        if (mMediaPlayer != null) {
+                            mMediaPlayer.pause();
+                            mMediaPlayer.seekTo(0);
+                        }
+                    } else if (focusChange == AUDIOFOCUS_GAIN) {
+                        //Resume playback
+                        mMediaPlayer.start();
+                    } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                        //Release media if we lose focus
+                        releaseMediaPlayer();
+                    }
+                }
+            };
+    private AudioManager mAudioManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +54,7 @@ public class ColorsActivity extends AppCompatActivity {
                 releaseMediaPlayer();
             }
         };
-
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         //Create arrays of words
         final ArrayList<Word> words = new ArrayList<Word>();
         words.add(new Word("red", "weṭeṭṭi", R.drawable.color_red, R.raw.color_red));  // resource id is of integer type
@@ -45,10 +72,22 @@ public class ColorsActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // Release if different sudio is played before the previous one finished
                 releaseMediaPlayer();
-                mMediaPlayer = MediaPlayer.create(ColorsActivity.this, words.get(position).getAudio());
-                mMediaPlayer.start();
-                mMediaPlayer.setOnCompletionListener(onCompletionListener);
+                //Request audio focus for playback
+                int result = mAudioManager.requestAudioFocus(mOnAudioFocusChangeListener,
+                        //uses music stream
+                        AudioManager.STREAM_MUSIC,
+                        //request permanent focus,no other sounds plays side by side
+                        AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+
+                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                    //we have audio focus
+                    mMediaPlayer = MediaPlayer.create(ColorsActivity.this, words.get(position).getAudio());
+                    mMediaPlayer.start();
+                    mMediaPlayer.setOnCompletionListener(onCompletionListener);
+
+                }
             }
         });
 
